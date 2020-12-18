@@ -1,220 +1,285 @@
-#ifndef _MY_VECTOR_
-#define _MY_VECTOR_
+#ifndef _STACK_
+#define _STACK_
 
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
 template <class T>
-class Vector
+class TStack
 {
 protected:
-  int length;
-  T* x;
+    int length;
+    T* data;
+    int top;
+    bool f;
+
 public:
-  Vector<T>* vec;
-  Vector();
-  Vector(T _v);
-  Vector(int rowsCount, T* _v);
-  Vector(int rowsCount, T _v);
-  Vector(Vector<T>& _v);
-  ~Vector();
+    TStack(int size = 1, bool _f = true);
+    TStack(TStack<T>& _v);
+    ~TStack();
 
-  Vector<T> operator +(Vector<T>& _v);
-  Vector<T> operator -(Vector<T>& _v);
-  Vector<T> operator *(Vector<T>& _v);
-  Vector<T> operator /(Vector<T>& _v);
-  Vector<T>& operator =(Vector<T>& _v);
-  T& operator[] (const int index);
+    TStack<T>& operator =(TStack<T>& _v);
 
-  Vector<T>& operator ++();
-  Vector<T>& operator --();
-  Vector<T>& operator +=(Vector<T>& _v);
-  Vector<T>& operator -=(Vector<T>& _v);
+    void Push(T d);
+    void SetData(T* _x, int size, int _top);
+    void Resize(int _size);
+    T Get();
+    int IsEmpty(void) const;
+    int IsFull(void) const;
+    int GetSize();
+    int GetCount();
 
-  template <class T1>
-  friend ostream& operator<< (ostream& ostr, const Vector<T1> &A);
-  template <class T1>
-  friend istream& operator >> (istream& istr, Vector<T1> &A);
+    inline int min_elem();
+    inline int max_elem();
 
-  int Length();
+
+    template <class T1>
+    friend ostream& operator<< (ostream& ostr, const TStack<T1>& A);
+    template <class T1>
+    friend istream& operator >> (istream& istr, TStack<T1>& A);
 };
 
 template <class T1>
-ostream& operator<< (ostream& ostr, const Vector<T1> &A) {
-  for (int i = 0; i < A.length; i++) {
-    ostr << A.x[i] << endl;
-  }
-  return ostr;
+ostream& operator<< (ostream& ostr, const TStack<T1>& A) {
+    for (int i = 0; i < A.top; i++) {
+        ostr << A.data[i] << endl;
+    }
+
+    return ostr;
 }
 
 template <class T1>
-istream& operator >> (istream& istr, Vector<T1> &A) {
-  for (int i = 0; i < A.length; i++) {
-    istr >> A.x[i];
-  }
-  return istr;
+istream& operator >> (istream& istr, TStack<T1>& A) {
+    int count;
+    istr >> count;
+    for (int i = 0; i < A.count; i++) {
+        T1 d;
+        istr >> d;
+        A.Push(d);
+    }
+
+    return istr;
 }
 
-#define MIN(a,b)(a>b?b:a)
-#define MAX(a,b)(a>b?a:b)
+template<class T>
+inline TStack<T>::TStack(int size, bool _f)
+{
+    if (size > 0)
+    {
+        this->length = size;
+        this->f = _f;
+        if (f)
+        {
+            data = new T[length];
+            for (int i = 0; i < length; i++)
+            {
+                data[i] = 0;
+            }
+        }
+        this->top = 0;
+    }
+    else
+    {
+        throw logic_error("Error");
+    }
+}
 
 template <class T>
-Vector<T>::Vector()
+TStack<T>::TStack(TStack<T>& _v)
 {
-  length = 0;
-  x = 0;
-}
-template <class T>
-Vector<T>::Vector(T _v)
-{
-  length = 1;
-  x = new T [length];
-  x[0] = _v;
-}
-template <class T>
-Vector<T>::Vector(int rowsCount, T* _v)
-{
-  length = rowsCount;
+    length = _v.length;
+    top = _v.top;
+    f = _v.f;
+    if (f)
+    {
+        data = new T[length];
+        for (int i = 0; i < length; i++)
+        {
+            data[i] = _v.data[i];
+        }
+    }
+    else
+    {
+        data = _v.data;
+    }
 
-  ///x = _v;
+}
 
-  x = new T [length];
-  for (int i = 0; i < length; i++)
-    x[i] = _v[i];
-}
 template <class T>
-Vector<T>::Vector(int rowsCount, T _v)
+TStack<T>::~TStack()
 {
-  length = rowsCount;
-  x = new T [length];
-  for (int i = 0; i < length; i++)
-    x[i] = _v;
+    length = 0;
+    if (f)
+    {
+        if (data != NULL)
+        {
+            delete[] data;
+            data = 0;
+        }
+    }
 }
-template <class T>
-Vector<T>::Vector(Vector<T>& _v)
-{
-  length = _v.length;
-  x = new T [length];
-  for (int i = 0; i < length;i = i + 1)
-    x[i] = _v.x[i];
-}
-template <class T>
-Vector<T>::~Vector()
-{
-  length = 0;
-  if (x != 0)
-    delete [] x;
-  x = 0;
-}
-template <class T>
-Vector<T> Vector<T>::operator +(Vector<T>& _v)
-{
-  Vector<T> res;
-  res.length = MIN(length, _v.length);
-  res.x = new T [res.length];
-  for (int i = 0; i < res.length; i++)
-  {
-    res.x[i] = x[i] + _v.x[i];
-  }
-  return res;
-}
-template <class T>
-Vector<T> Vector<T>::operator -(Vector<T>& _v)
-{
-  Vector<T> res;
-  res.length = MIN(length, _v.length);
-  res.x = new T [res.length];
-  for (int i = 0; i < res.length; i++)
-  {
-    res.x[i] = x[i] - _v.x[i];
-  }
-  return res;
-}
-template <class T>
-Vector<T> Vector<T>::operator *(Vector<T>& _v)
-{
-  Vector<T> res;
-  res.length = MIN(length, _v.length);
-  res.x = new T [res.length];
-  for (int i = 0; i < res.length; i++)
-  {
-    res.x[i] = x[i] * _v.x[i];
-  }
-  return res;
-}
-template <class T>
-Vector<T> Vector<T>::operator /(Vector<T>& _v)
 
+template<typename T>
+inline int TStack<T>::max_elem()
 {
-  Vector<T> res;
-  res.length = MIN(length, _v.length);
-  res.x = new T [res.length];
-  for (int i = 0; i < res.length; i++)
-  {
-    res.x[i] = x[i] / _v.x[i];
-  }
-  return res;
+    T res = data[0];
+    for (int i = 1; i < length; i++)
+    {
+        if (data[i] > res)
+        {
+            res = data[i];
+        }
+    }
+
+    return res;
 }
-template <class T>
-Vector<T>& Vector<T>::operator =(Vector<T>& _v)
+
+template<typename T>
+inline int TStack<T>::min_elem()
 {
-  if (this == &_v)
+    T res = data[0];
+    for (int i = 1; i < length; i++)
+    {
+        if (data[i] < res)
+        {
+            res = data[i];
+        }
+    }
+
+    return res;
+}
+
+
+template <class T>
+TStack<T>& TStack<T>::operator =(TStack<T>& _v)
+{
+    if (this == &_v)
+        return *this;
+
+    this->length = _v.length;
+    f = _v.f;
+
+    if (f)
+    {
+        if (data != NULL)
+        {
+            delete[] data;
+        }
+        this->data = new T[length];
+
+        for (int i = 0; i < length; i++)
+        {
+            data[i] = _v.data[i];
+        }
+    }
+    else
+    {
+        data = _v.data;
+    }
+
+    this->top = _v.top;
+
     return *this;
-
-  length = _v.length;
-  x = new T [length];
-  for (int i = 0; i < length; i++)
-    x[i] = _v.x[i];
-  return *this;
-}
-template <class T>
-T& Vector<T>::operator[] (const int index)
-{
-  if ((index >= 0) && (index < length))
-    return x[index];
-  return x[0];
 }
 
-template <class T>
-Vector<T>& Vector<T>::operator ++()
+template<class T>
+inline void TStack<T>::Push(T d)
 {
-  for (int i = 0; i < length; i++)
-    x[i]++;
-  return *this;
-}
-template <class T>
-Vector<T>& Vector<T>::operator --()
-{
-  for (int i = 0; i < length; i++)
-    x[i]--;
-  return *this;
-}
-template <class T>
-Vector<T>& Vector<T>::operator +=(Vector<T>& _v)
-{
-  length = MIN(length, _v.length);
-  for (int i = 0; i < length; i++)
-  {
-    x[i] += _v.x[i];
-  }
-  return *this;
-}
-template <class T>
-Vector<T>& Vector<T>::operator -=(Vector<T>& _v)
-{
-  length = MIN(length, _v.length);
-  for (int i = 0; i < length; i++)
-  {
-    x[i] -= _v.x[i];
-  }
-  return *this;
-}
-template <class T>
-int Vector<T>::Length()
-{
-  return length;
+    if (top - 1 > length)
+    {
+        throw "Error";
+    }
+
+    data[top] = d;
+    top++;
 }
 
+template<class T>
+inline void TStack<T>::SetData(T* _x, int size, int _top)
+{
+    if (f)
+    {
+        if (data != NULL)
+        {
+            delete[] data;
+        }
+        this->length = size;
+        f = false;
+        data = _x;
+        top = _top;
+    }
+}
 
+template<class T>
+inline void TStack<T>::Resize(int _size)
+{
+    if (_size <= 0)
+    {
+        throw logic_error("Error");
+    }
+
+    if (data == NULL)
+    {
+        delete[] data;
+        data = new T[_size];
+    }
+
+    else
+    {
+        T* temp = new T[_size];
+
+        for (int i = 0; i < this->GetCount(); i++)
+        {
+            temp[i] = Get();
+        }
+
+        delete[] data;
+
+        data = new T[_size];
+
+        for (int i = 0; i < 1; i++)
+        {
+            data[i] = temp[i];
+        }
+    }
+}
+
+template<class T>
+inline T TStack<T>::Get()
+{
+    if (top <= 0)
+    {
+        throw logic_error("Error");
+    }
+
+    T d = data[top - 1];
+    top--;
+
+    return d;
+}
+
+template<class T>
+inline int TStack<T>::IsEmpty(void) const
+{
+    return (top == 0);
+}
+
+template<class T>
+inline int TStack<T>::IsFull(void) const
+{
+    return (top - 1 > length);
+}
+
+template <class T>
+int TStack<T>::GetSize()
+{
+    return length;
+}
+template<class T>
+inline int TStack<T>::GetCount()
+{
+    return top;
+}
 #endif
